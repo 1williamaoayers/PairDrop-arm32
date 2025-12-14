@@ -32,6 +32,13 @@
 # 创建项目目录并进入
 mkdir -p ~/pairdrop && cd ~/pairdrop
 
+# 智能检测 Docker Compose 命令（兼容新旧版本）
+if docker compose version >/dev/null 2>&1; then
+    DC_CMD="docker compose"
+else
+    DC_CMD="docker-compose"
+fi
+
 # 自动创建 docker-compose.yml 配置文件
 cat <<'EOF' > docker-compose.yml
 version: "3.8"
@@ -83,11 +90,16 @@ services:
 EOF
 
 # 启动服务
-docker-compose up -d
+$DC_CMD up -d
 
 # 查看运行状态
-docker-compose ps
+$DC_CMD ps
 ```
+
+> **💡 兼容性说明**：
+> - 脚本会自动检测你的系统支持 `docker compose`（新版）还是 `docker-compose`（旧版）
+> - OpenWRT、较新的 Docker 版本使用 `docker compose`（推荐）
+> - 较旧的系统使用 `docker-compose`（自动降级）
 
 ### ✅ 部署完成
 
@@ -153,20 +165,20 @@ http://192.168.1.100:3008
 
 ```bash
 # 查看运行状态
-docker-compose ps
+docker compose ps
 
 # 查看日志（排查问题）
-docker-compose logs -f
+docker compose logs -f
 
 # 停止服务
-docker-compose down
+docker compose down
 
 # 重启服务
-docker-compose restart
+docker compose restart
 
 # 更新到最新版本
-docker-compose pull
-docker-compose up -d
+docker compose pull
+docker compose up -d
 ```
 
 ---
@@ -180,10 +192,10 @@ docker-compose up -d
 cd ~/pairdrop
 
 # 停止并删除容器
-docker-compose down
+docker compose down
 
 # 删除镜像（释放空间）
-docker rmi ghcr.io/1williamaoyers/pairdrop-arm32:latest
+docker rmi ghcr.io/1williamaoayers/pairdrop-arm32:latest
 
 # 返回上级目录
 cd ~
@@ -230,7 +242,7 @@ docker-compose --version
 - ✅ 设备和手机在同一个 Wi-Fi 下
 - ✅ 防火墙没有拦截 3008 端口
 - ✅ IP 地址输入正确
-- ✅ 容器正在运行（`docker-compose ps` 查看）
+- ✅ 容器正在运行（`docker compose ps` 查看）
 
 ### Q2: 端口被占用了？
 
@@ -241,7 +253,7 @@ ports:
   - "8080:3000"  # 改成其他端口，比如 8080
 ```
 
-然后重启：`docker-compose up -d`
+然后重启：`docker compose up -d`
 
 ### Q3: 设备找不到彼此？
 
@@ -318,8 +330,8 @@ image: ghcr.io/1williamaoayers/pairdrop-arm32:main
 然后重新部署：
 
 ```bash
-docker-compose pull
-docker-compose up -d
+docker compose pull
+docker compose up -d
 ```
 
 ### 支持的架构
