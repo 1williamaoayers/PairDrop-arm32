@@ -1,134 +1,301 @@
 <div align="center">
-  <a href="https://github.com/schlagmichdoch/PairDrop">
-    <img src="public/images/android-chrome-512x512.png" alt="Logo"  width="150" height="150">
-  </a>
- 
-  # _Send it_, with [PairDrop](https://pairdrop.net)
-
-  <p>
-    Local file sharing <a href="https://pairdrop.net"><strong>in your web browser</strong></a>. 
-    <br>
-    Inspired by Apple's AirDrop.
-    <br> 
-    Fork of Snapdrop.
-    <br>
-    <br>
-    <a href="https://github.com/schlagmichdoch/PairDrop/issues">Report a bug</a>
-    <br />
-    <a href="https://github.com/schlagmichdoch/PairDrop/issues">Request feature</a>
-  </p>
+  <h1>🚀 PairDrop ARM32 版</h1>
+  <p><strong>局域网文件传输神器 · 玩客云/树莓派专用</strong></p>
+  <p>像苹果"隔空投送"一样，在手机、电脑、平板之间秒传文件 📱💻📷</p>
 </div>
-<br>
 
-## Features
-File sharing on your local network that works on all platforms.
+---
 
-- A multi-platform AirDrop-like solution that works.
-  - Send images, documents or text via peer-to-peer connection to devices on the same local network.
-- Internet transfers
-  - Join temporary public rooms to transfer files easily over the Internet.
-- Web-app 
-  - Works on all devices with a modern web-browser.
- 
-Send a file from your phone to your laptop?
-<br>Share photos in original quality with friends using Android and iOS?
-<br>Share private files peer-to-peer between Linux systems?
+## 💡 这是什么？
 
-<img src="docs/pairdrop_screenshot_mobile.gif" alt="Screenshot GIF showing PairDrop in use" style="width: 300px">
+**PairDrop** 是一个超简单的局域网文件传输工具，就像苹果的"隔空投送"（AirDrop），但它：
 
-## Differences to the [Snapdrop](https://github.com/RobinLinus/snapdrop) it is based on
-<details><summary>View all differences</summary>
+- ✅ **跨平台**：安卓、苹果、Windows、Mac 全支持
+- ✅ **无需安装 App**：打开浏览器就能用
+- ✅ **局域网直传**：文件不经过服务器，速度飞快
+- ✅ **完全免费**：开源项目，无广告无限制
 
-### Paired Devices and Public Rooms — Internet Transfer
-* Transfer files over the Internet between paired devices or by entering temporary public rooms.
-* Connect to devices in complex network environments (public Wi-Fi, company network, iCloud Private Relay, VPN, etc.).
-* Connect to devices on your mobile hotspot.
-* Devices outside of your local network that are behind a NAT are auto-connected via the PairDrop TURN server.
-* Devices from the local network, in the same public room, or previously paired are shown.
+**本项目特色**：专为 **玩客云、树莓派** 等 ARM32 设备优化，一键部署，装好就能用！🎉
 
-#### Persistent Device Pairing
+---
 
-Always connect to known devices
+## 🚀 极速部署（复制粘贴即可）
 
-* Pair devices via a 6-digit code or a QR-Code.
-* Paired devices always find each other via shared secrets independently of their local network. 
-* Pairing is persistent. You find your devices even after reopening PairDrop.
-* You can edit and unpair devices easily.
+> **适用设备**：玩客云、树莓派、斐讯 N1 等 ARM32/ARM64 设备  
+> **前提条件**：已安装 Docker 和 Docker Compose（如未安装，见下方"安装 Docker"）
 
-#### Temporary Public Rooms
+### 一键部署命令
 
-Connect to others in complex network situations, or over the Internet.
+**只需复制下面这一整段代码，粘贴到你的设备终端（SSH）里，回车即可！**
 
-* Enter a public room via a 5-letter code or a QR-code.
-* Enter a public room to temporarily connect to devices outside your local network.
-* All devices in the same public room see each other.
-* Public rooms are temporary. Closing PairDrop  leaves all rooms.
+```bash
+# 创建项目目录并进入
+mkdir -p ~/pairdrop && cd ~/pairdrop
 
-### [Improved UI for Sending/Receiving Files](https://github.com/RobinLinus/snapdrop/issues/560)
-* Files are transferred after a request is accepted. Files are auto-downloaded upon completing a transfer, if possible.
-* Multiple files are downloaded as a ZIP file
-* Download, share or save to gallery via the "Share" menu on Android and iOS.
-* Multiple files are transferred at once with an overall progress indicator.
+# 自动创建 docker-compose.yml 配置文件
+cat <<'EOF' > docker-compose.yml
+version: "3.8"
 
-### Send Files or Text Directly From Share Menu, Context Menu or CLI
-* [Send files directly from context menu on Ubuntu (using Nautilus)](docs/how-to.md#send-multiple-files-and-directories-directly-from-context-menu-on-ubuntu-using-nautilus)
-* [Send files directly from the context menu on Windows](docs/how-to.md#send-files-directly-from-context-menu-on-windows)
-* [Send directly from the "Share" menu on iOS](docs/how-to.md#send-directly-from-share-menu-on-ios)
-* [Send directly from the "Share" menu on Android](docs/how-to.md#send-directly-from-share-menu-on-android)
-* [Send directly via the command-line interface](docs/how-to.md#send-directly-via-command-line-interface)
+services:
+  pairdrop:
+    # 使用 GitHub Container Registry 镜像
+    # 请将 YOUR_GITHUB_USERNAME 替换为你的 GitHub 用户名
+    # 例如：ghcr.io/schlagmichdoch/pairdrop:latest
+    image: ghcr.io/YOUR_GITHUB_USERNAME/pairdrop:latest
+    
+    container_name: pairdrop
+    restart: unless-stopped
+    
+    # 端口映射：主机端口:容器端口
+    # 访问地址：http://设备IP:3008
+    # 宿主机监听 3008 端口，容器内部监听 3000 端口
+    ports:
+      - "3008:3000"
+    
+    # 环境变量配置
+    environment:
+      # WebSocket 降级：如果 WebRTC P2P 连接不可用，是否启用 WebSocket 降级
+      # 默认 false，如遇连接问题可设为 true
+      - WS_FALLBACK=false
+      
+      # 速率限制：限制客户端在 5 分钟内最多 1000 次请求
+      # 默认 false，公网部署建议设为 true
+      - RATE_LIMIT=false
+      
+      # STUN/TURN 服务器配置文件路径
+      # 如需自定义 STUN/TURN 服务器，设置为配置文件路径
+      # 例如：/app/rtc_config.json
+      - RTC_CONFIG=false
+      
+      # 调试模式：启用容器和对等连接调试信息
+      # 默认 false，排查问题时可设为 true
+      - DEBUG_MODE=false
+      
+      # 时区设置（已在镜像中设置为 Asia/Shanghai）
+      - TZ=Asia/Shanghai
+    
+    # 数据持久化（可选）
+    # 如需持久化配置或日志，取消下面的注释
+    # volumes:
+    #   - ./pairdrop-data:/app/data
+    
+    # 健康检查（已在 Dockerfile 中配置）
+    # 可通过 docker ps 查看容器健康状态
+EOF
 
-### Other Changes
-* Change your display name to easily differentiate your devices.
-* [Paste files/text and choose the recipient afterwards ](https://github.com/RobinLinus/snapdrop/pull/534)
-* [Prevent devices from sleeping on file transfer](https://github.com/RobinLinus/snapdrop/pull/413)
-* Warn user before PairDrop is closed on file transfer
-* Open PairDrop on multiple tabs simultaneously (Thanks [@willstott101](https://github.com/willstott101))
-* [Video and audio preview](https://github.com/RobinLinus/snapdrop/pull/455) (Thanks [@victorwads](https://github.com/victorwads))
-* Switch theme back to auto/system after dark or light mode is on
-* Node-only implementation (Thanks [@Bellisario](https://github.com/Bellisario))
-* Auto-restart on error (Thanks [@KaKi87](https://github.com/KaKi87))
-* Lots of stability fixes (Thanks [@MWY001](https://github.com/MWY001) [@skiby7](https://github.com/skiby7) and [@willstott101](https://github.com/willstott101))
-* To host PairDrop on your local network (e.g. on Raspberry Pi): [All peers connected with private IPs are discoverable by each other](https://github.com/RobinLinus/snapdrop/pull/558)
-* When hosting PairDrop yourself, you can [set your own STUN/TURN servers](docs/host-your-own.md#specify-stunturn-servers)
-* Translations.
+# 启动服务
+docker-compose up -d
 
-</details>
+# 查看运行状态
+docker-compose ps
+```
 
-## Translate PairDrop on [Hosted Weblate](https://hosted.weblate.org/engage/pairdrop/)
-<a href="https://hosted.weblate.org/engage/pairdrop/">
-<img src="https://hosted.weblate.org/widget/pairdrop/horizontal-blue.svg" alt="Translation status" style="width: 300px" />
-</a>
+### ⚠️ 重要提示
 
-## Built with the following awesome technologies:
-* Vanilla HTML5 / JS ES6 / CSS 3 frontend
-* [WebRTC](http://webrtc.org/) / WebSockets
-* [Node.js](https://nodejs.org/en/) backend
-* [Progressive web app (PWA)](https://en.wikipedia.org/wiki/Progressive_web_app) unified functionality
-* [IndexedDB API](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) storage handling
-* [zip.js](https://gildas-lormeau.github.io/zip.js/) library
-* [cyrb53](https://github.com/bryc/code/blob/master/jshash/experimental/cyrb53.js) super-fast hash function
-* [NoSleep](https://github.com/richtr/NoSleep.js) display sleep, add wake lock ([MIT](licenses/MIT-NoSleep))
-* [heic2any](https://github.com/alexcorvi/heic2any) HEIC/HEIF to PNG/GIF/JPEG ([MIT](licenses/MIT-heic2any))
-* [Weblate](https://weblate.org/) web-based localization tool
-* [BrowserStack](https://www.browserstack.com/) This project is tested with BrowserStack
+**必须修改镜像地址！** 在上面的配置文件中，找到这一行：
 
-[FAQ](docs/faq.md)
+```yaml
+image: ghcr.io/YOUR_GITHUB_USERNAME/pairdrop:latest
+```
 
-[Host your own instance with Docker or Node.js](docs/host-your-own.md).
+将 `YOUR_GITHUB_USERNAME` 替换为你的 GitHub 用户名（或者使用官方镜像地址）。
 
-## Support
-<a href="https://www.buymeacoffee.com/pairdrop" target="_blank">
-<img src="https://cdn.buymeacoffee.com/buttons/v2/default-blue.png" alt="Buy me a coffee" style="height: 60px !important;width: 217px !important;" >
-</a>
-<br />
-<br />
+---
 
-PairDrop is libre, and always will be. \
-If you find it useful and want to support free and open-source software, please consider donating using the button above. \
-I footed the bill for the domain and the server, and you can help create and maintain great software by supporting me. \
-Thank you very much for your contribution!
+## 💻 如何使用
 
-## Contributing
-Feel free to [open an issue](https://github.com/schlagmichdoch/pairdrop/issues/new/choose) or a
-[pull request](https://github.com/schlagmichdoch/pairdrop/pulls), following the
-[Contributing Guidelines](CONTRIBUTING.md).
+### 1️⃣ 查看设备 IP 地址
+
+如果你不知道玩客云的 IP 地址，在终端输入：
+
+```bash
+ip addr show | grep "inet " | grep -v 127.0.0.1
+```
+
+会显示类似这样的结果：
+
+```
+inet 192.168.1.100/24 brd 192.168.1.255 scope global eth0
+```
+
+这里的 `192.168.1.100` 就是你的设备 IP。
+
+### 2️⃣ 在浏览器打开
+
+在**同一局域网**内的任何设备（手机、电脑、平板）上，打开浏览器，输入：
+
+```
+http://192.168.1.100:3008
+```
+
+（把 `192.168.1.100` 替换成你的实际 IP）
+
+### 3️⃣ 开始传文件 🎉
+
+- 打开后会看到局域网内所有打开 PairDrop 的设备
+- 点击设备图标，选择文件，秒传！
+- 支持多文件、大文件，速度取决于你的 Wi-Fi
+
+---
+
+## 📱 手机也能用吗？
+
+**当然可以！** 而且超级方便：
+
+1. 手机连接同一个 Wi-Fi
+2. 打开浏览器（Safari、Chrome 都行）
+3. 输入 `http://设备IP:3008`
+4. 添加到主屏幕，就像一个 App 一样使用
+
+---
+
+## 🛠️ 常用命令
+
+```bash
+# 查看运行状态
+docker-compose ps
+
+# 查看日志（排查问题）
+docker-compose logs -f
+
+# 停止服务
+docker-compose down
+
+# 重启服务
+docker-compose restart
+
+# 更新到最新版本
+docker-compose pull
+docker-compose up -d
+```
+
+---
+
+## 🗑️ 如何彻底卸载（后悔药）
+
+如果你不想用了，想完全删除，复制下面这段命令：
+
+```bash
+# 进入项目目录
+cd ~/pairdrop
+
+# 停止并删除容器
+docker-compose down
+
+# 删除镜像（释放空间）
+docker rmi ghcr.io/YOUR_GITHUB_USERNAME/pairdrop:latest
+
+# 返回上级目录
+cd ~
+
+# 删除整个项目文件夹
+rm -rf pairdrop
+
+# 验证清理完成
+docker ps -a | grep pairdrop
+docker images | grep pairdrop
+```
+
+执行完后，系统里不会留下任何痕迹。✨
+
+---
+
+## 🐳 还没安装 Docker？
+
+如果你的设备还没装 Docker，先执行这个：
+
+```bash
+# 使用官方安装脚本（适用于大多数 Linux 发行版）
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+
+# 将当前用户添加到 docker 组（避免每次用 sudo）
+sudo usermod -aG docker $USER
+
+# 重新登录或执行以下命令使组权限生效
+newgrp docker
+
+# 验证安装
+docker --version
+docker-compose --version
+```
+
+---
+
+## ❓ 常见问题
+
+### Q1: 访问不了怎么办？
+
+**检查清单**：
+- ✅ 设备和手机在同一个 Wi-Fi 下
+- ✅ 防火墙没有拦截 3008 端口
+- ✅ IP 地址输入正确
+- ✅ 容器正在运行（`docker-compose ps` 查看）
+
+### Q2: 端口被占用了？
+
+修改 `docker-compose.yml` 中的端口映射：
+
+```yaml
+ports:
+  - "8080:3000"  # 改成其他端口，比如 8080
+```
+
+然后重启：`docker-compose up -d`
+
+### Q3: 设备找不到彼此？
+
+尝试启用 WebSocket 降级：
+
+```yaml
+environment:
+  - WS_FALLBACK=true
+```
+
+### Q4: 玩客云性能够用吗？
+
+**完全够用！** PairDrop 是轻量级应用，ARM32 设备跑起来毫无压力。文件传输走的是点对点连接，不经过服务器，玩客云只负责"牵线搭桥"。
+
+---
+
+## 🌟 特性
+
+- 🚀 **秒传文件**：局域网直连，速度飞快
+- 🔒 **隐私安全**：文件不上传服务器，点对点传输
+- 📱 **跨平台**：iOS、Android、Windows、Mac、Linux 全支持
+- 🌐 **无需安装**：打开浏览器就能用
+- 🎨 **界面美观**：现代化设计，操作简单
+- 🔗 **设备配对**：通过 6 位数字码永久配对设备
+- 🌍 **公网传输**：支持临时公共房间，跨网络传文件
+
+---
+
+## 📚 更多文档
+
+- [详细部署指南](DEPLOYMENT.md) - 包含高级配置和故障排查
+- [原项目地址](https://github.com/schlagmichdoch/PairDrop) - PairDrop 官方仓库
+- [Docker Hub](https://hub.docker.com/) - Docker 相关资源
+
+---
+
+## 💖 支持项目
+
+如果觉得好用，欢迎：
+
+- ⭐ Star 本项目
+- 🐛 提交 Bug 反馈
+- 💡 提出功能建议
+- 📢 分享给朋友
+
+---
+
+## 📜 许可证
+
+本项目基于 [PairDrop](https://github.com/schlagmichdoch/PairDrop) 项目，遵循其原有开源许可证。
+
+---
+
+<div align="center">
+  <p>Made with ❤️ for 玩客云/树莓派玩家</p>
+  <p>享受局域网文件传输的乐趣吧！🎉</p>
+</div>
