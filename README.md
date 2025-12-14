@@ -30,76 +30,36 @@
 
 ```bash
 # 创建项目目录并进入
-mkdir -p ~/pairdrop && cd ~/pairdrop
+mkdir -p /home/pairdrop && cd /home/pairdrop
 
-# 智能检测 Docker Compose 命令（兼容新旧版本）
-if docker compose version >/dev/null 2>&1; then
-    DC_CMD="docker compose"
-else
-    DC_CMD="docker-compose"
-fi
-
-# 自动创建 docker-compose.yml 配置文件
+# 写入配置文件
 cat <<'EOF' > docker-compose.yml
-version: "3.8"
-
 services:
   pairdrop:
-    # 使用 GitHub Container Registry 镜像
-    # 镜像地址：ghcr.io/1williamaoayers/pairdrop-arm32:latest
     image: ghcr.io/1williamaoayers/pairdrop-arm32:latest
-    
     container_name: pairdrop
-    restart: unless-stopped
-    
-    # 端口映射：主机端口:容器端口
-    # 访问地址：http://设备IP:3008
-    # 宿主机监听 3008 端口，容器内部监听 3000 端口
+    restart: always
     ports:
       - "3008:3000"
-    
-    # 环境变量配置
     environment:
-      # WebSocket 降级：如果 WebRTC P2P 连接不可用，是否启用 WebSocket 降级
-      # 默认 false，如遇连接问题可设为 true
       - WS_FALLBACK=false
-      
-      # 速率限制：限制客户端在 5 分钟内最多 1000 次请求
-      # 默认 false，公网部署建议设为 true
       - RATE_LIMIT=false
-      
-      # STUN/TURN 服务器配置文件路径
-      # 如需自定义 STUN/TURN 服务器，设置为配置文件路径
-      # 例如：/app/rtc_config.json
       - RTC_CONFIG=false
-      
-      # 调试模式：启用容器和对等连接调试信息
-      # 默认 false，排查问题时可设为 true
       - DEBUG_MODE=false
-      
-      # 时区设置（已在镜像中设置为 Asia/Shanghai）
       - TZ=Asia/Shanghai
-    
-    # 数据持久化（可选）
-    # 如需持久化配置或日志，取消下面的注释
-    # volumes:
-    #   - ./pairdrop-data:/app/data
-    
-    # 健康检查（已在 Dockerfile 中配置）
-    # 可通过 docker ps 查看容器健康状态
 EOF
 
 # 启动服务
-$DC_CMD up -d
+docker compose up -d
 
-# 查看运行状态
-$DC_CMD ps
+# 显示成功提示
+echo "✅ 部署成功！访问地址：http://设备IP:3008"
 ```
 
-> **💡 兼容性说明**：
-> - 脚本会自动检测你的系统支持 `docker compose`（新版）还是 `docker-compose`（旧版）
-> - OpenWRT、较新的 Docker 版本使用 `docker compose`（推荐）
-> - 较旧的系统使用 `docker-compose`（自动降级）
+> **💡 提示**：
+> - 安装目录：`/home/pairdrop`
+> - 访问端口：`3008`
+> - 如需修改配置，编辑 `/home/pairdrop/docker-compose.yml` 后执行 `docker compose up -d` 重启
 
 ### ✅ 部署完成
 
@@ -189,7 +149,7 @@ docker compose up -d
 
 ```bash
 # 进入项目目录
-cd ~/pairdrop
+cd /home/pairdrop
 
 # 停止并删除容器
 docker compose down
@@ -197,11 +157,8 @@ docker compose down
 # 删除镜像（释放空间）
 docker rmi ghcr.io/1williamaoayers/pairdrop-arm32:latest
 
-# 返回上级目录
-cd ~
-
 # 删除整个项目文件夹
-rm -rf pairdrop
+cd / && rm -rf /home/pairdrop
 
 # 验证清理完成
 docker ps -a | grep pairdrop
