@@ -29,33 +29,29 @@
 **只需复制下面这一整段代码，粘贴到你的设备终端（SSH）里，回车即可！**
 
 ```bash
-# 1. 创建数据目录（可选，用于持久化）
+# 1. 创建并进入项目目录
 mkdir -p /home/pairdrop
+cd /home/pairdrop
 
-# 2. 停止并删除旧容器（如果存在）
+# 2. 清理旧容器（如果有）
 docker stop pairdrop 2>/dev/null || true
 docker rm pairdrop 2>/dev/null || true
 
-# 3. 启动 PairDrop 容器
+# 3. 一键启动（使用南大加速镜像）
 docker run -d \
   --name pairdrop \
   --restart always \
   -p 3008:3000 \
-  -e WS_FALLBACK=false \
-  -e RATE_LIMIT=false \
-  -e RTC_CONFIG=false \
-  -e DEBUG_MODE=false \
-  -e TZ=Asia/Shanghai \
-  ghcr.io/1williamaoayers/pairdrop-arm32:latest
+  ghcr.nju.edu.cn/1williamaoayers/pairdrop-arm32:latest
 
-# 4. 显示成功提示
-echo "✅ 部署成功！"
-echo "📱 请访问：http://你的设备IP:3008"
-echo "💡 查看状态：docker ps | grep pairdrop"
+echo "✅ 部署完成！"
+echo "📂 安装位置：/home/pairdrop"
+echo "🔗 访问地址：http://(请替换为你的IP):3008"
 ```
 
 > **💡 提示**：
 > - 使用 `docker run` 命令，无需安装 Docker Compose
+> - 使用南京大学镜像加速源，国内下载更快
 > - 适用于 OpenWRT、玩客云、树莓派等所有 ARM 设备
 > - 访问端口：`3008`
 > - 容器会自动重启（`--restart always`）
