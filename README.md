@@ -29,37 +29,36 @@
 **只需复制下面这一整段代码，粘贴到你的设备终端（SSH）里，回车即可！**
 
 ```bash
-# 创建项目目录并进入
-mkdir -p /home/pairdrop && cd /home/pairdrop
+# 1. 创建数据目录（可选，用于持久化）
+mkdir -p /home/pairdrop
 
-# 写入配置文件
-cat <<'EOF' > docker-compose.yml
-services:
-  pairdrop:
-    image: ghcr.io/1williamaoayers/pairdrop-arm32:latest
-    container_name: pairdrop
-    restart: always
-    ports:
-      - "3008:3000"
-    environment:
-      - WS_FALLBACK=false
-      - RATE_LIMIT=false
-      - RTC_CONFIG=false
-      - DEBUG_MODE=false
-      - TZ=Asia/Shanghai
-EOF
+# 2. 停止并删除旧容器（如果存在）
+docker stop pairdrop 2>/dev/null || true
+docker rm pairdrop 2>/dev/null || true
 
-# 启动服务
-docker compose up -d
+# 3. 启动 PairDrop 容器
+docker run -d \
+  --name pairdrop \
+  --restart always \
+  -p 3008:3000 \
+  -e WS_FALLBACK=false \
+  -e RATE_LIMIT=false \
+  -e RTC_CONFIG=false \
+  -e DEBUG_MODE=false \
+  -e TZ=Asia/Shanghai \
+  ghcr.io/1williamaoayers/pairdrop-arm32:latest
 
-# 显示成功提示
-echo "✅ 部署成功！访问地址：http://设备IP:3008"
+# 4. 显示成功提示
+echo "✅ 部署成功！"
+echo "📱 请访问：http://你的设备IP:3008"
+echo "💡 查看状态：docker ps | grep pairdrop"
 ```
 
 > **💡 提示**：
-> - 安装目录：`/home/pairdrop`
+> - 使用 `docker run` 命令，无需安装 Docker Compose
+> - 适用于 OpenWRT、玩客云、树莓派等所有 ARM 设备
 > - 访问端口：`3008`
-> - 如需修改配置，编辑 `/home/pairdrop/docker-compose.yml` 后执行 `docker compose up -d` 重启
+> - 容器会自动重启（`--restart always`）
 
 ### ✅ 部署完成
 
@@ -125,20 +124,28 @@ http://192.168.1.100:3008
 
 ```bash
 # 查看运行状态
-docker compose ps
+docker ps | grep pairdrop
+
+# 查看详细信息
+docker inspect pairdrop
 
 # 查看日志（排查问题）
-docker compose logs -f
+docker logs -f pairdrop
 
 # 停止服务
-docker compose down
+docker stop pairdrop
+
+# 启动服务
+docker start pairdrop
 
 # 重启服务
-docker compose restart
+docker restart pairdrop
 
 # 更新到最新版本
-docker compose pull
-docker compose up -d
+docker stop pairdrop
+docker rm pairdrop
+docker pull ghcr.io/1williamaoayers/pairdrop-arm32:latest
+# 然后重新执行一键部署命令
 ```
 
 ---
@@ -148,17 +155,15 @@ docker compose up -d
 如果你不想用了，想完全删除，复制下面这段命令：
 
 ```bash
-# 进入项目目录
-cd /home/pairdrop
-
 # 停止并删除容器
-docker compose down
+docker stop pairdrop
+docker rm pairdrop
 
 # 删除镜像（释放空间）
 docker rmi ghcr.io/1williamaoayers/pairdrop-arm32:latest
 
-# 删除整个项目文件夹
-cd / && rm -rf /home/pairdrop
+# 删除数据目录（如果有）
+rm -rf /home/pairdrop
 
 # 验证清理完成
 docker ps -a | grep pairdrop
@@ -199,26 +204,39 @@ docker-compose --version
 - ✅ 设备和手机在同一个 Wi-Fi 下
 - ✅ 防火墙没有拦截 3008 端口
 - ✅ IP 地址输入正确
-- ✅ 容器正在运行（`docker compose ps` 查看）
+- ✅ 容器正在运行（`docker ps | grep pairdrop` 查看）
 
 ### Q2: 端口被占用了？
 
-修改 `docker-compose.yml` 中的端口映射：
+重新部署并指定其他端口：
 
-```yaml
-ports:
-  - "8080:3000"  # 改成其他端口，比如 8080
+```bash
+# 先删除旧容器
+docker stop pairdrop && docker rm pairdrop
+
+# 使用新端口启动（例如 8080）
+docker run -d \
+  --name pairdrop \
+  --restart always \
+  -p 8080:3000 \
+  -e TZ=Asia/Shanghai \
+  ghcr.io/1williamaoayers/pairdrop-arm32:latest
 ```
-
-然后重启：`docker compose up -d`
 
 ### Q3: 设备找不到彼此？
 
 尝试启用 WebSocket 降级：
 
-```yaml
-environment:
-  - WS_FALLBACK=true
+```bash
+# 重新部署并启用 WS_FALLBACK
+docker stop pairdrop && docker rm pairdrop
+docker run -d \
+  --name pairdrop \
+  --restart always \
+  -p 3008:3000 \
+  -e WS_FALLBACK=true \
+  -e TZ=Asia/Shanghai \
+  ghcr.io/1williamaoayers/pairdrop-arm32:latest
 ```
 
 ### Q4: 玩客云性能够用吗？
@@ -278,17 +296,19 @@ sudo systemctl restart docker
 
 ### 使用开发版
 
-如果你想尝试最新的开发版本，修改 `docker-compose.yml`：
-
-```yaml
-image: ghcr.io/1williamaoayers/pairdrop-arm32:main
-```
-
-然后重新部署：
+如果你想尝试最新的开发版本：
 
 ```bash
-docker compose pull
-docker compose up -d
+# 停止并删除当前容器
+docker stop pairdrop && docker rm pairdrop
+
+# 使用 :main 标签启动开发版
+docker run -d \
+  --name pairdrop \
+  --restart always \
+  -p 3008:3000 \
+  -e TZ=Asia/Shanghai \
+  ghcr.io/1williamaoayers/pairdrop-arm32:main
 ```
 
 ### 支持的架构
