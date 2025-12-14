@@ -3,45 +3,43 @@ version: "3.8"
 services:
   pairdrop:
     # 使用 GitHub Container Registry 镜像
-    # 请将 YOUR_GITHUB_USERNAME 替换为你的 GitHub 用户名
-    # 例如：ghcr.io/schlagmichdoch/pairdrop:latest
-    image: ghcr.io/YOUR_GITHUB_USERNAME/pairdrop:latest
-    
+    # 镜像地址：ghcr.io/1williamaoayers/pairdrop-arm32:latest
+    image: ghcr.io/1williamaoayers/pairdrop-arm32:latest
+
     container_name: pairdrop
     restart: unless-stopped
-    
+
     # 端口映射：主机端口:容器端口
     # 访问地址：http://设备IP:3008
     # 宿主机监听 3008 端口，容器内部监听 3000 端口
     ports:
       - "3008:3000"
-    
+
     # 环境变量配置
     environment:
       # WebSocket 降级：如果 WebRTC P2P 连接不可用，是否启用 WebSocket 降级
       # 默认 false，如遇连接问题可设为 true
       - WS_FALLBACK=false
-      
+
       # 速率限制：限制客户端在 5 分钟内最多 1000 次请求
       # 默认 false，公网部署建议设为 true
       - RATE_LIMIT=false
-      
+
       # STUN/TURN 服务器配置文件路径
       # 如需自定义 STUN/TURN 服务器，设置为配置文件路径
       # 例如：/app/rtc_config.json
       - RTC_CONFIG=false
-      
+
       # 调试模式：启用容器和对等连接调试信息
       # 默认 false，排查问题时可设为 true
       - DEBUG_MODE=false
-      
+
       # 时区设置（已在镜像中设置为 Asia/Shanghai）
       - TZ=Asia/Shanghai
-    
     # 数据持久化（可选）
     # 如需持久化配置或日志，取消下面的注释
     # volumes:
     #   - ./pairdrop-data:/app/data
-    
+
     # 健康检查（已在 Dockerfile 中配置）
     # 可通过 docker ps 查看容器健康状态

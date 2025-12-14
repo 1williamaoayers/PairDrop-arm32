@@ -39,9 +39,8 @@ version: "3.8"
 services:
   pairdrop:
     # 使用 GitHub Container Registry 镜像
-    # 请将 YOUR_GITHUB_USERNAME 替换为你的 GitHub 用户名
-    # 例如：ghcr.io/schlagmichdoch/pairdrop:latest
-    image: ghcr.io/YOUR_GITHUB_USERNAME/pairdrop:latest
+    # 镜像地址：ghcr.io/1williamaoayers/pairdrop-arm32:latest
+    image: ghcr.io/1williamaoayers/pairdrop-arm32:latest
     
     container_name: pairdrop
     restart: unless-stopped
@@ -90,15 +89,16 @@ docker-compose up -d
 docker-compose ps
 ```
 
-### ⚠️ 重要提示
+### ✅ 部署完成
 
-**必须修改镜像地址！** 在上面的配置文件中，找到这一行：
+执行完上面的命令后，你会看到类似这样的输出：
 
-```yaml
-image: ghcr.io/YOUR_GITHUB_USERNAME/pairdrop:latest
+```
+Creating network "pairdrop_default" with the default driver
+Creating pairdrop ... done
 ```
 
-将 `YOUR_GITHUB_USERNAME` 替换为你的 GitHub 用户名（或者使用官方镜像地址）。
+这就说明部署成功了！🎉
 
 ---
 
@@ -183,7 +183,7 @@ cd ~/pairdrop
 docker-compose down
 
 # 删除镜像（释放空间）
-docker rmi ghcr.io/YOUR_GITHUB_USERNAME/pairdrop:latest
+docker rmi ghcr.io/1williamaoyers/pairdrop-arm32:latest
 
 # 返回上级目录
 cd ~
@@ -256,6 +256,27 @@ environment:
 
 **完全够用！** PairDrop 是轻量级应用，ARM32 设备跑起来毫无压力。文件传输走的是点对点连接，不经过服务器，玩客云只负责"牵线搭桥"。
 
+### Q5: 镜像拉取很慢怎么办？
+
+可以配置 Docker 镜像加速器（国内用户推荐）：
+
+```bash
+# 编辑 Docker 配置
+sudo mkdir -p /etc/docker
+sudo tee /etc/docker/daemon.json <<-'EOF'
+{
+  "registry-mirrors": [
+    "https://docker.mirrors.ustc.edu.cn",
+    "https://hub-mirror.c.163.com"
+  ]
+}
+EOF
+
+# 重启 Docker
+sudo systemctl daemon-reload
+sudo systemctl restart docker
+```
+
 ---
 
 ## 🌟 特性
@@ -270,11 +291,61 @@ environment:
 
 ---
 
+## 👨‍💻 开发者说明
+
+### 镜像标签说明
+
+本项目提供两个镜像标签：
+
+- **`:latest`** - 稳定版本（推荐普通用户使用）
+  - 对应 `main` 分支的最新稳定代码
+  - 经过基本测试，适合生产环境
+  - 镜像地址：`ghcr.io/1williamaoayers/pairdrop-arm32:latest`
+
+- **`:main`** - 开发版本（仅供测试）
+  - 对应 `main` 分支的最新提交
+  - 可能包含未充分测试的新特性
+  - 镜像地址：`ghcr.io/1williamaoayers/pairdrop-arm32:main`
+
+### 使用开发版
+
+如果你想尝试最新的开发版本，修改 `docker-compose.yml`：
+
+```yaml
+image: ghcr.io/1williamaoayers/pairdrop-arm32:main
+```
+
+然后重新部署：
+
+```bash
+docker-compose pull
+docker-compose up -d
+```
+
+### 支持的架构
+
+本镜像支持以下 CPU 架构：
+
+- `linux/amd64` - x86_64（普通 PC、服务器）
+- `linux/arm64` - ARM64（树莓派 4、N1 等）
+- `linux/arm/v7` - ARM32（玩客云、树莓派 3 等）
+
+Docker 会自动选择适合你设备的架构版本。
+
+### 构建说明
+
+本项目使用 GitHub Actions 自动构建多架构镜像：
+
+- 推送到 `main` 分支时，自动构建并推送 `:latest` 和 `:main` 标签
+- 创建版本标签（如 `v1.0.0`）时，自动构建并推送版本标签
+
+---
+
 ## 📚 更多文档
 
 - [详细部署指南](DEPLOYMENT.md) - 包含高级配置和故障排查
 - [原项目地址](https://github.com/schlagmichdoch/PairDrop) - PairDrop 官方仓库
-- [Docker Hub](https://hub.docker.com/) - Docker 相关资源
+- [GitHub Container Registry](https://github.com/1williamaoayers/PairDrop-arm32/pkgs/container/pairdrop-arm32) - 镜像仓库
 
 ---
 
